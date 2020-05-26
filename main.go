@@ -1,7 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gifff/chat-server/pkg/server"
+
+	"github.com/labstack/echo"
+)
 
 func main() {
-	fmt.Println("vim-go")
+	s := server.New(echo.New(), ":8080")
+	s.Start()
+	fmt.Println("Chat Server is started")
 }
