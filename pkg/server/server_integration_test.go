@@ -16,11 +16,57 @@ import (
 	"github.com/gifff/chat-server/pkg/server"
 )
 
+func closeConnection(c *websocket.Conn) error {
+	err := c.WriteControl(
+		websocket.CloseMessage,
+		websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+		time.Now().Add(time.Second))
+	if err != nil {
+		return err
+	}
+
+	return c.Close()
+}
+
 func TestHelloHandler(t *testing.T) {
 	e := echo.New()
 	_ = server.New(e, "")
 
-	expectedMessages := []model.Message{
+	senderOutgoingMessages := []model.Message{
+		{
+			Message: "hello",
+			Type:    model.TextMessage,
+		},
+		{
+			Message: "hello2",
+			Type:    model.TextMessage,
+		},
+	}
+
+	senderExpectedIncomingMessages := []model.Message{
+		{
+			ID:      1,
+			Message: "hello",
+			Type:    model.TextMessage,
+			User: model.User{
+				ID:   1337,
+				Name: "",
+				IsMe: true,
+			},
+		},
+		{
+			ID:      2,
+			Message: "hello2",
+			Type:    model.TextMessage,
+			User: model.User{
+				ID:   1337,
+				Name: "",
+				IsMe: true,
+			},
+		},
+	}
+
+	clientExpectedIncomingMessages := []model.Message{
 		{
 			ID:      1,
 			Message: "hello",
@@ -71,10 +117,7 @@ func TestHelloHandler(t *testing.T) {
 
 			wg.Done()
 
-			defer func() {
-				c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
-				c.Close()
-			}()
+			defer closeConnection(c)
 
 			if got, want := resp.StatusCode, http.StatusSwitchingProtocols; got != want {
 				t.Errorf("resp.StatusCode = %q, want %q", got, want)
@@ -82,7 +125,7 @@ func TestHelloHandler(t *testing.T) {
 
 			var msg model.Message
 
-			for i, expectedMessage := range expectedMessages {
+			for i, expectedMessage := range clientExpectedIncomingMessages {
 				err = c.ReadJSON(&msg)
 				if err != nil {
 					t.Fatal(err)
@@ -109,68 +152,30 @@ func TestHelloHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		defer func() {
-			c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
-			c.Close()
-		}()
+		defer closeConnection(c)
 
 		if got, want := resp.StatusCode, http.StatusSwitchingProtocols; got != want {
 			t.Errorf("resp.StatusCode = %q, want %q", got, want)
 		}
 
-		err = c.WriteJSON(map[string]interface{}{
-			"message": "hello",
-			"type":    model.TextMessage,
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
+		for i := range senderOutgoingMessages {
+			outgoingMsg := senderOutgoingMessages[i]
+			expectedIncomingMsg := senderExpectedIncomingMessages[i]
 
-		var msg model.Message
-		err = c.ReadJSON(&msg)
-		if err != nil {
-			t.Fatal(err)
-		}
+			err = c.WriteJSON(&outgoingMsg)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		wantedMsg := model.Message{
-			ID:      1,
-			Message: "hello",
-			Type:    model.TextMessage,
-			User: model.User{
-				ID:   1337,
-				Name: "",
-				IsMe: true,
-			},
-		}
-		if msg != wantedMsg {
-			t.Errorf("message: got = %+v, want %+v", msg, wantedMsg)
-		}
+			var incomingMsg model.Message
+			err = c.ReadJSON(&incomingMsg)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		err = c.WriteJSON(map[string]interface{}{
-			"message": "hello2",
-			"type":    model.TextMessage,
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		err = c.ReadJSON(&msg)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		wantedMsg = model.Message{
-			ID:      2,
-			Message: "hello2",
-			Type:    model.TextMessage,
-			User: model.User{
-				ID:   1337,
-				Name: "",
-				IsMe: true,
-			},
-		}
-		if msg != wantedMsg {
-			t.Errorf("message: got = %+v, want %+v", msg, wantedMsg)
+			if incomingMsg != expectedIncomingMsg {
+				t.Errorf("incoming message: got = %+v, want %+v", incomingMsg, expectedIncomingMsg)
+			}
 		}
 	})
 }
