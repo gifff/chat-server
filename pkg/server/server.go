@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/gifff/chat-server/pkg/server/handlers"
+	"github.com/gifff/chat-server/pkg/server/middlewares"
 
 	"github.com/labstack/echo"
 )
@@ -11,6 +12,9 @@ func New(e *echo.Echo, port string) Server {
 	if port == "" {
 		port = ":8080"
 	}
+
+	e.Use(middlewares.AuthenticationExtractor)
+	e.GET("/messages/listen", handlers.Hello)
 
 	return Server{
 		e:    e,
@@ -26,6 +30,5 @@ type Server struct {
 
 // Start fires up the Echo server
 func (s Server) Start() {
-	s.e.GET("/messages/listen", handlers.Hello)
 	s.e.Logger.Fatal(s.e.Start(s.port))
 }
