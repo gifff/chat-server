@@ -4,6 +4,7 @@ import (
 	"log"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo"
@@ -13,35 +14,43 @@ import (
 
 var (
 	upgrader       = websocket.Upgrader{}
-	connectionPool = make(map[int]*websocket.Conn)
+	connectionPool = make(map[int]*Connection)
 	mutex          sync.RWMutex
-	id             int64 = 1
+	id             int64 = 0
 )
 
-func broadcast(msg string, senderID int) {
-	userData := map[string]interface{}{
-		"id":    senderID,
-		"is_me": false,
-	}
+// Connection wraps the websocket.Conn with mutex
+type Connection struct {
+	mu   sync.Mutex
+	conn *websocket.Conn
+}
 
-	message := map[string]interface{}{
-		"id":      id,
-		"message": msg,
-		"type":    model.TextMessage,
-		"user":    userData,
-	}
+func broadcast(msg string, senderID int) {
 	atomic.AddInt64(&id, 1)
 
 	mutex.RLock()
 	for userID, wsConn := range connectionPool {
 
-		if userID == senderID {
-			userData["is_me"] = true
-		} else {
-			userData["is_me"] = false
+		c := wsConn
+		userID := userID
+
+		message := model.Message{
+			ID:      int(id),
+			Type:    model.TextMessage,
+			Message: msg,
+			User: model.User{
+				ID:   senderID,
+				IsMe: userID == senderID,
+			},
 		}
 
-		_ = wsConn.WriteJSON(message)
+		go func() {
+			c.mu.Lock()
+			log.Printf("Writing to [User ID: %d] at %d", userID, time.Now().UnixNano())
+			c.conn.SetWriteDeadline(time.Now().Add(time.Second))
+			_ = c.conn.WriteJSON(message)
+			c.mu.Unlock()
+		}()
 
 	}
 	mutex.RUnlock()
@@ -54,9 +63,13 @@ func Hello(c echo.Context) error {
 		return err
 	}
 
+	conn := &Connection{
+		conn: ws,
+	}
+
 	userID, _ := c.Get("user_id").(int)
 	mutex.Lock()
-	connectionPool[userID] = ws
+	connectionPool[userID] = conn
 	mutex.Unlock()
 
 	defer func() {

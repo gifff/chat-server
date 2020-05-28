@@ -160,12 +160,15 @@ func TestHelloHandler(t *testing.T) {
 
 		for i := range senderOutgoingMessages {
 			outgoingMsg := senderOutgoingMessages[i]
-			expectedIncomingMsg := senderExpectedIncomingMessages[i]
 
 			err = c.WriteJSON(&outgoingMsg)
 			if err != nil {
 				t.Fatal(err)
 			}
+		}
+
+		for i := range senderExpectedIncomingMessages {
+			expectedIncomingMsg := senderExpectedIncomingMessages[i]
 
 			var incomingMsg model.Message
 			err = c.ReadJSON(&incomingMsg)
