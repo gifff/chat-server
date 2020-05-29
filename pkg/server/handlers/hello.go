@@ -27,13 +27,22 @@ type Connection struct {
 	workerIsRunning bool
 }
 
+// NewConnection returns Connection and do the necessary initializations
+func NewConnection(conn *websocket.Conn) *Connection {
+	c := &Connection{
+		conn: conn,
+	}
+	c.initQueue()
+
+	return c
+}
+
 // Enqueue pushes message into internal message queue to be picked by the worker
 func (c *Connection) Enqueue(msg interface{}) {
-	c.ensureQueue()
 	c.messageQueue <- msg
 }
 
-func (c *Connection) ensureQueue() {
+func (c *Connection) initQueue() {
 	if c.messageQueue == nil {
 		c.messageQueue = make(chan interface{})
 	}
@@ -47,7 +56,6 @@ func (c *Connection) StartWorker() {
 		return
 	}
 
-	c.ensureQueue()
 	c.workerIsRunning = true
 	go func() {
 		for c.workerIsRunning {
@@ -144,9 +152,7 @@ func Hello(c echo.Context) error {
 		return err
 	}
 
-	conn := &Connection{
-		conn: ws,
-	}
+	conn := NewConnection(ws)
 
 	userID, _ := c.Get("user_id").(int)
 	mutex.Lock()
