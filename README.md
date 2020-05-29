@@ -24,3 +24,20 @@ $ go test -timeout 30s -parallel 10 ./...
 ### Experimental / TODO
 
 - [x] Enable Publisher to publish message by replying to the websocket
+- [x] Enable multiple connection per user
+- [x] Message order synchronization
+
+## Lesson Learned
+
+### Message order synchronization
+
+#### Problem:
+
+Spawning goroutine to send message A (goroutine A) prior to message B
+(goroutine B) doesn't guarantee that goroutine A will be executed prior to
+goroutine B.
+
+#### Solution:
+
+Spawn a worker (goroutine) within the connection to write message. Message is
+extracted from internal message queue which guarantees the message order.
