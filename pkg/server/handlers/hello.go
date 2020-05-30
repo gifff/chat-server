@@ -24,6 +24,7 @@ type Connection struct {
 	mu              sync.Mutex
 	conn            *websocket.Conn
 	messageQueue    chan interface{}
+	stopSignal      chan struct{}
 	workerIsRunning bool
 }
 
@@ -46,6 +47,9 @@ func (c *Connection) initQueue() {
 	if c.messageQueue == nil {
 		c.messageQueue = make(chan interface{})
 	}
+	if c.stopSignal == nil {
+		c.stopSignal = make(chan struct{})
+	}
 }
 
 // StartWorker spawns a goroutine which job is to pick message from internal message queue
@@ -59,18 +63,32 @@ func (c *Connection) StartWorker() {
 	c.workerIsRunning = true
 	go func() {
 		for c.workerIsRunning {
-			msg := <-c.messageQueue
-			c.mu.Lock()
-			c.conn.SetWriteDeadline(time.Now().Add(time.Second))
-			_ = c.conn.WriteJSON(&msg)
-			c.mu.Unlock()
+			// use channel for stop signal instead of checking for c.workerIsRunning
+			// it is because that if the toggle is off, the msg := <-c.messageQueue is still
+			// waiting for incoming message and will be able to send one last message even
+			// after StopWorker() is invoked.
+			// simply put, StopWorker() does not immediately kill the worker goroutine
+			select {
+			case msg := <-c.messageQueue:
+				c.mu.Lock()
+				c.conn.SetWriteDeadline(time.Now().Add(time.Second))
+				_ = c.conn.WriteJSON(&msg)
+				c.mu.Unlock()
+			case <-c.stopSignal:
+				c.mu.Lock()
+				c.workerIsRunning = false
+				c.mu.Unlock()
+				break
+			}
 		}
 	}()
 }
 
 // StopWorker notifies the running worker to cease from working by toggling off the running flag
 func (c *Connection) StopWorker() {
-	c.workerIsRunning = false
+	if c.workerIsRunning {
+		c.stopSignal <- struct{}{}
+	}
 }
 
 // ConnectionPool holds pool of Connection with concurrent-safe handling for fast storing and deletion
