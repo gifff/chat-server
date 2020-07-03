@@ -15,6 +15,7 @@ func New(e *echo.Echo, port string) Server {
 
 	e.Use(middlewares.AuthenticationExtractor)
 	e.GET("/messages/listen", handlers.Hello)
+	e.POST("/messages", handlers.SendMessage)
 
 	return Server{
 		e:    e,

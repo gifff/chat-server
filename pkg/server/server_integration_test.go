@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/posener/wstest"
 
+	"github.com/gifff/chat-server/pkg/di"
 	"github.com/gifff/chat-server/pkg/model"
 	"github.com/gifff/chat-server/pkg/server"
 )
@@ -26,6 +27,10 @@ func closeConnection(c *websocket.Conn) error {
 	}
 
 	return c.Close()
+}
+
+func init() {
+	di.InjectDependencies()
 }
 
 func TestHelloHandler(t *testing.T) {
