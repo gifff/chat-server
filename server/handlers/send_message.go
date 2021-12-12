@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/labstack/echo"
 
-	"github.com/gifff/chat-server/pkg/model"
+	"github.com/gifff/chat-server/model"
 )
 
 // SendMessage handler

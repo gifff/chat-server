@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gifff/chat-server/contract"
-	"github.com/gifff/chat-server/pkg/model"
+	"github.com/gifff/chat-server/model"
 	"github.com/gifff/chat-server/websocket"
 )
 

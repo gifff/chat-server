@@ -12,8 +12,8 @@ import (
 	"github.com/labstack/echo"
 	"github.com/posener/wstest"
 
+	"github.com/gifff/chat-server/model"
 	"github.com/gifff/chat-server/pkg/di"
-	"github.com/gifff/chat-server/pkg/model"
 	"github.com/gifff/chat-server/server"
 	"github.com/gifff/chat-server/server/handlers"
 )
