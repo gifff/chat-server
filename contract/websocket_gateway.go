@@ -1,6 +1,6 @@
 package contract
 
-import "github.com/gifff/chat-server/pkg/websocket"
+import "github.com/gifff/chat-server/websocket"
 
 // WebsocketGateway adapter
 type WebsocketGateway interface {

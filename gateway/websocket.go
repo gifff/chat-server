@@ -7,7 +7,7 @@ import (
 
 	"github.com/gifff/chat-server/contract"
 	"github.com/gifff/chat-server/pkg/model"
-	"github.com/gifff/chat-server/pkg/websocket"
+	"github.com/gifff/chat-server/websocket"
 )
 
 // NewWebsocket returns Websocket object which satisfies the WebsocketGateway contract

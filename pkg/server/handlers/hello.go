@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo"
 
 	"github.com/gifff/chat-server/pkg/model"
-	"github.com/gifff/chat-server/pkg/websocket"
+	"github.com/gifff/chat-server/websocket"
 )
 
 var (
