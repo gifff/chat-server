@@ -11,14 +11,14 @@ import (
 )
 
 // New instantiates Server instance
-func New(e *echo.Echo, port string) Server {
+func New(e *echo.Echo, port string, h handlers.Handlers) Server {
 	if port == "" {
 		port = ":8080"
 	}
 
 	e.Use(middlewares.AuthenticationExtractor)
-	e.GET("/messages/listen", handlers.Hello)
-	e.POST("/messages", handlers.SendMessage)
+	e.GET("/messages/listen", h.MessageListener)
+	e.POST("/messages", h.SendMessage)
 
 	return Server{
 		e:    e,

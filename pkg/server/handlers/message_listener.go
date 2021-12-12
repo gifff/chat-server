@@ -3,30 +3,25 @@ package handlers
 import (
 	"log"
 
-	gorillaWebsocket "github.com/gorilla/websocket"
 	"github.com/labstack/echo"
 
 	"github.com/gifff/chat-server/pkg/model"
 	"github.com/gifff/chat-server/websocket"
 )
 
-var (
-	upgrader = gorillaWebsocket.Upgrader{}
-)
-
-// Hello is a websocket handler
-func Hello(c echo.Context) error {
-	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+// MessageListener is a websocket handler
+func (h *Handlers) MessageListener(c echo.Context) error {
+	ws, err := h.WSUpgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		return err
 	}
 
 	userID, _ := c.Get("user_id").(int)
 	conn := websocket.NewConnectionDispatcher(ws)
-	registrationID := WebsocketGateway.RegisterConnection(userID, conn)
+	registrationID := h.WebsocketGateway.RegisterConnection(userID, conn)
 
 	defer func() {
-		WebsocketGateway.UnregisterConnection(userID, registrationID)
+		h.WebsocketGateway.UnregisterConnection(userID, registrationID)
 		ws.Close()
 	}()
 
@@ -41,7 +36,7 @@ func Hello(c echo.Context) error {
 		log.Printf("[DEBUG] Message [userID: %d]: %+v\n", userID, msg)
 
 		if msg.Type != model.UnknownMessage {
-			ChatService.SendMessage(msg.Message, userID)
+			h.ChatService.SendMessage(msg.Message, userID)
 		}
 	}
 

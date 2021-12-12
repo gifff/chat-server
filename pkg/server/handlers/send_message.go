@@ -7,7 +7,7 @@ import (
 )
 
 // SendMessage handler
-func SendMessage(c echo.Context) error {
+func (h *Handlers) SendMessage(c echo.Context) error {
 	var reqBody model.Message
 	err := c.Bind(&reqBody)
 	if err != nil {

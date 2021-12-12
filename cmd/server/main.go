@@ -13,6 +13,7 @@ import (
 	"github.com/gifff/chat-server/logger"
 	"github.com/gifff/chat-server/pkg/di"
 	"github.com/gifff/chat-server/pkg/server"
+	"github.com/gifff/chat-server/pkg/server/handlers"
 
 	"github.com/labstack/echo"
 )
@@ -30,12 +31,16 @@ func main() {
 	log.SetOutput(logger.NewLevelFilter(logLevel, os.Stdout))
 	serverPort := fmt.Sprintf(":%d", port)
 
-	di.InjectDependencies()
+	wgw, chatSvc := di.BuildDependencies()
+	hs := handlers.Handlers{
+		WebsocketGateway: wgw,
+		ChatService:      chatSvc,
+	}
 
 	_, cancel := context.WithCancel(context.Background())
 
 	e := echo.New()
-	s := server.New(e, serverPort)
+	s := server.New(e, serverPort, hs)
 	serverCh := s.Start()
 	log.Printf("[INFO] Chat Server is started at port %d", port)
 
