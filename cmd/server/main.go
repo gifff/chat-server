@@ -55,9 +55,5 @@ func main() {
 	log.Printf("[INFO] Shutting down")
 	cancel()
 
-	shutdownCtx, shutdownCtxCancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer shutdownCtxCancel()
-	if err := e.Shutdown(shutdownCtx); err != nil {
-		log.Printf("[ERROR] error when shutting down: %s", err)
-	}
+	s.Stop(10 * time.Second)
 }

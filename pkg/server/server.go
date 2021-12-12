@@ -1,8 +1,10 @@
 package server
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gifff/chat-server/pkg/server/handlers"
 	"github.com/gifff/chat-server/pkg/server/middlewares"
@@ -11,7 +13,7 @@ import (
 )
 
 // New instantiates Server instance
-func New(e *echo.Echo, port string, h handlers.Handlers) Server {
+func New(e *echo.Echo, port string, h handlers.Handlers) *Server {
 	if port == "" {
 		port = ":8080"
 	}
@@ -20,7 +22,7 @@ func New(e *echo.Echo, port string, h handlers.Handlers) Server {
 	e.GET("/messages/listen", h.MessageListener)
 	e.POST("/messages", h.SendMessage)
 
-	return Server{
+	return &Server{
 		e:    e,
 		port: port,
 	}
@@ -33,7 +35,7 @@ type Server struct {
 }
 
 // Start fires up the Echo server
-func (s Server) Start() <-chan struct{} {
+func (s *Server) Start() <-chan struct{} {
 	ch := make(chan struct{}, 1)
 	go func() {
 		if err := s.e.Start(s.port); err != nil && err != http.ErrServerClosed {
@@ -45,4 +47,14 @@ func (s Server) Start() <-chan struct{} {
 	}()
 
 	return ch
+}
+
+// Stop signals the Server to stop
+func (s *Server) Stop(timeout time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := s.e.Shutdown(ctx); err != nil {
+		log.Printf("[ERROR] error when shutting down: %s", err)
+	}
 }
