@@ -40,7 +40,7 @@ func closeConnection(c *websocket.Conn) error {
 	return c.Close()
 }
 
-func TestHelloHandler(t *testing.T) {
+func TestMessageListenerHandler(t *testing.T) {
 	e := echo.New()
 	_ = server.New(e, "", hs)
 
@@ -194,7 +194,7 @@ func TestHelloHandler(t *testing.T) {
 		}
 	})
 }
-func TestHelloHandlerMultipleConnectionPerClient(t *testing.T) {
+func TestMessageListenerHandlerMultipleConnectionPerClient(t *testing.T) {
 	e := echo.New()
 	_ = server.New(e, "", hs)
 
