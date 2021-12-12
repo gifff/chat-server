@@ -1,4 +1,4 @@
-package contract
+package wsgateway
 
 import "github.com/gifff/chat-server/websocket"
 

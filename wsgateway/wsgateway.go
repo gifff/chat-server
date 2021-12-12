@@ -1,30 +1,29 @@
-package gateway
+package wsgateway
 
 import (
 	"log"
 	"sync"
 	"time"
 
-	"github.com/gifff/chat-server/contract"
 	"github.com/gifff/chat-server/model"
 	"github.com/gifff/chat-server/websocket"
 )
 
-// NewWebsocket returns Websocket object which satisfies the WebsocketGateway contract
-func NewWebsocket() contract.WebsocketGateway {
-	return &Websocket{
+// New returns Websocket object which satisfies the WebsocketGateway contract
+func New() WebsocketGateway {
+	return &wsGateway{
 		userConnectionPoolMap: make(map[int]*websocket.ConnectionPool),
 	}
 }
 
-// Websocket is WebsocketGateway implementation
-type Websocket struct {
+// wsGateway is WebsocketGateway implementation
+type wsGateway struct {
 	mu                    sync.RWMutex
 	userConnectionPoolMap map[int]*websocket.ConnectionPool
 }
 
 // EnqueueMessageBroadcast implementation
-func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromUserID int) {
+func (w *wsGateway) EnqueueMessageBroadcast(messageID int, message string, fromUserID int) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -48,7 +47,7 @@ func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromU
 }
 
 // RegisterConnection implementation
-func (w *Websocket) RegisterConnection(userID int, connection websocket.ConnectionDispatcher) (registrationID int) {
+func (w *wsGateway) RegisterConnection(userID int, connection websocket.ConnectionDispatcher) (registrationID int) {
 	w.mu.Lock()
 	if _, ok := w.userConnectionPoolMap[userID]; !ok {
 		w.userConnectionPoolMap[userID] = websocket.NewConnectionPool()
@@ -61,7 +60,7 @@ func (w *Websocket) RegisterConnection(userID int, connection websocket.Connecti
 }
 
 // UnregisterConnection implementation
-func (w *Websocket) UnregisterConnection(userID int, registrationID int) {
+func (w *wsGateway) UnregisterConnection(userID int, registrationID int) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 

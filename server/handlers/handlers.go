@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"github.com/gifff/chat-server/contract"
+	"github.com/gifff/chat-server/wsgateway"
 
 	gorillaWebsocket "github.com/gorilla/websocket"
 )
 
 type Handlers struct {
 	WSUpgrader       gorillaWebsocket.Upgrader // default value is ok
-	WebsocketGateway contract.WebsocketGateway
+	WebsocketGateway wsgateway.WebsocketGateway
 	ChatService      contract.ChatService
 }
