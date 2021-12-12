@@ -1,12 +1,16 @@
-package service
+package chatservice
 
 import (
-	"github.com/gifff/chat-server/contract"
 	"github.com/gifff/chat-server/interactor"
 )
 
-// NewChat returns chatService instance which satisfies ChatService contract
-func NewChat(messageInteractor interactor.MessageInteractor, realtimeMessagingInteractor interactor.RealtimeMessagingInteractor) contract.ChatService {
+// ChatService contract
+type ChatService interface {
+	SendMessage(message string, fromUserID int)
+}
+
+// NewService returns chatService instance which satisfies ChatService interface
+func NewService(messageInteractor interactor.MessageInteractor, realtimeMessagingInteractor interactor.RealtimeMessagingInteractor) ChatService {
 	return chatService{
 		messageInteractor:           messageInteractor,
 		realtimeMessagingInteractor: realtimeMessagingInteractor,
