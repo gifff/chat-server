@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gifff/chat-server/pkg/server/handlers"
-	"github.com/gifff/chat-server/pkg/server/middlewares"
+	"github.com/gifff/chat-server/server/handlers"
+	"github.com/gifff/chat-server/server/middlewares"
 
 	"github.com/labstack/echo"
 )
