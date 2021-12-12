@@ -39,7 +39,8 @@ func main() {
 
 func spawnConsumer(n int, quit <-chan os.Signal) {
 	if n < 1 {
-		panic("number of consumer must be positive")
+		log.Printf("[ERROR] number of consumer must be positive. specified=%d", n)
+		return
 	}
 
 	wg := sync.WaitGroup{}
