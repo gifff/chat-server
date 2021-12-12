@@ -28,8 +28,8 @@ func NewConnection(conn *gorillaWebsocket.Conn) contract.WebsocketConnection {
 	return c
 }
 
-// Enqueue pushes message into internal message queue to be picked by the worker
-func (c *Connection) Enqueue(msg interface{}) {
+// Dispatch pushes message into internal message queue to be sent by the dispatcher
+func (c *Connection) Dispatch(msg interface{}) {
 	c.messageQueue <- msg
 }
 
@@ -42,10 +42,10 @@ func (c *Connection) initQueue() {
 	}
 }
 
-// StartWorker spawns a goroutine which job is to pick message from internal message queue
+// StartDispatcher spawns a goroutine which job is to pick message from internal message queue
 // and write the message to the opened connection.
-// Only one worker at a time can be running.
-func (c *Connection) StartWorker() {
+// Only one dispatcher at a time can be running.
+func (c *Connection) StartDispatcher() {
 	if c.workerIsRunning {
 		return
 	}
@@ -56,8 +56,8 @@ func (c *Connection) StartWorker() {
 			// use channel for stop signal instead of checking for c.workerIsRunning
 			// it is because that if the toggle is off, the msg := <-c.messageQueue is still
 			// waiting for incoming message and will be able to send one last message even
-			// after StopWorker() is invoked.
-			// simply put, StopWorker() does not immediately kill the worker goroutine
+			// after StopDispatcher() is invoked.
+			// simply put, StopDispatcher() does not immediately kill the dispatcher goroutine
 			select {
 			case msg := <-c.messageQueue:
 				c.mu.Lock()
@@ -68,14 +68,14 @@ func (c *Connection) StartWorker() {
 				c.mu.Lock()
 				c.workerIsRunning = false
 				c.mu.Unlock()
-				break
 			}
 		}
 	}()
 }
 
-// StopWorker notifies the running worker to cease from working by toggling off the running flag
-func (c *Connection) StopWorker() {
+// StopDispatcher notifies the running dispatcher to cease dispatching
+// messages by toggling off the running flag
+func (c *Connection) StopDispatcher() {
 	if c.workerIsRunning {
 		c.stopSignal <- struct{}{}
 	}

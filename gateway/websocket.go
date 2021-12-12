@@ -42,7 +42,7 @@ func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromU
 
 		for connID, conn := range userConnectionPool.Slice() {
 			log.Printf("[DEBUG] Writing to [User ID: %d][Conn ID: %d] at %d", userID, connID, time.Now().UnixNano())
-			conn.Enqueue(message)
+			conn.Dispatch(message)
 		}
 	}
 }
@@ -54,7 +54,7 @@ func (w *Websocket) RegisterConnection(userID int, connection contract.Websocket
 		w.userConnectionPoolMap[userID] = websocket.NewConnectionPool()
 	}
 	registrationID = w.userConnectionPoolMap[userID].Store(connection)
-	connection.StartWorker()
+	connection.StartDispatcher()
 	w.mu.Unlock()
 
 	return
@@ -75,6 +75,6 @@ func (w *Websocket) UnregisterConnection(userID int, registrationID int) {
 		return
 	}
 
-	connection.StopWorker()
+	connection.StopDispatcher()
 	userConnectionPool.Delete(registrationID)
 }
