@@ -48,7 +48,7 @@ func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromU
 }
 
 // RegisterConnection implementation
-func (w *Websocket) RegisterConnection(userID int, connection contract.WebsocketConnection) (registrationID int) {
+func (w *Websocket) RegisterConnection(userID int, connection websocket.ConnectionDispatcher) (registrationID int) {
 	w.mu.Lock()
 	if _, ok := w.userConnectionPoolMap[userID]; !ok {
 		w.userConnectionPoolMap[userID] = websocket.NewConnectionPool()

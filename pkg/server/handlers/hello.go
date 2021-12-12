@@ -22,7 +22,7 @@ func Hello(c echo.Context) error {
 	}
 
 	userID, _ := c.Get("user_id").(int)
-	conn := websocket.NewConnection(ws)
+	conn := websocket.NewConnectionDispatcher(ws)
 	registrationID := WebsocketGateway.RegisterConnection(userID, conn)
 
 	defer func() {

@@ -5,11 +5,9 @@ import (
 	"time"
 
 	gorillaWebsocket "github.com/gorilla/websocket"
-
-	"github.com/gifff/chat-server/contract"
 )
 
-// Connection wraps the websocket.Conn with mutex and satisfies the WebsocketConnection contract
+// Connection wraps the websocket.Conn with mutex and satisfies the ConnectionDispatcher interface
 type Connection struct {
 	mu              sync.Mutex
 	conn            *gorillaWebsocket.Conn
@@ -18,8 +16,8 @@ type Connection struct {
 	workerIsRunning bool
 }
 
-// NewConnection returns Connection and do the necessary initializations
-func NewConnection(conn *gorillaWebsocket.Conn) contract.WebsocketConnection {
+// NewConnectionDispatcher returns Connection and do the necessary initializations
+func NewConnectionDispatcher(conn *gorillaWebsocket.Conn) ConnectionDispatcher {
 	c := &Connection{
 		conn: conn,
 	}
