@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gifff/chat-server/di"
 	"github.com/gifff/chat-server/logger"
-	"github.com/gifff/chat-server/pkg/di"
 	"github.com/gifff/chat-server/server"
 	"github.com/gifff/chat-server/server/handlers"
 
