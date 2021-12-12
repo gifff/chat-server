@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/posener/wstest"
 
-	"github.com/gifff/chat-server/di"
+	"github.com/gifff/chat-server/deps"
 	"github.com/gifff/chat-server/model"
 	"github.com/gifff/chat-server/server"
 	"github.com/gifff/chat-server/server/handlers"
@@ -21,7 +21,7 @@ import (
 var hs handlers.Handlers
 
 func init() {
-	wgw, chatSvc := di.BuildDependencies()
+	wgw, chatSvc := deps.BuildDependencies()
 	hs = handlers.Handlers{
 		WebsocketGateway: wgw,
 		ChatService:      chatSvc,

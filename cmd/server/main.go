@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gifff/chat-server/di"
+	"github.com/gifff/chat-server/deps"
 	"github.com/gifff/chat-server/logger"
 	"github.com/gifff/chat-server/server"
 	"github.com/gifff/chat-server/server/handlers"
@@ -31,7 +31,7 @@ func main() {
 	log.SetOutput(logger.NewLevelFilter(logLevel, os.Stdout))
 	serverPort := fmt.Sprintf(":%d", port)
 
-	wgw, chatSvc := di.BuildDependencies()
+	wgw, chatSvc := deps.BuildDependencies()
 	hs := handlers.Handlers{
 		WebsocketGateway: wgw,
 		ChatService:      chatSvc,

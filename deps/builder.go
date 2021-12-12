@@ -1,4 +1,4 @@
-package di
+package deps
 
 import (
 	"github.com/gifff/chat-server/contract"
