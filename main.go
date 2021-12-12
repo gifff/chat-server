@@ -1,7 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gifff/chat-server/pkg/di"
 	"github.com/gifff/chat-server/pkg/server"
@@ -12,7 +17,27 @@ import (
 func main() {
 	di.InjectDependencies()
 
-	s := server.New(echo.New(), ":8080")
-	s.Start()
-	fmt.Println("Chat Server is started")
+	_, cancel := context.WithCancel(context.Background())
+
+	e := echo.New()
+	s := server.New(e, ":8080")
+	serverCh := s.Start()
+	log.Printf("[INFO] Chat Server is started")
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 10 seconds.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	select {
+	case <-quit:
+	case <-serverCh:
+	}
+	log.Printf("[INFO] Shutting down")
+	cancel()
+
+	shutdownCtx, shutdownCtxCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCtxCancel()
+	if err := e.Shutdown(shutdownCtx); err != nil {
+		log.Printf("[ERROR] error when shutting down: %s", err)
+	}
 }

@@ -1,6 +1,9 @@
 package server
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/gifff/chat-server/pkg/server/handlers"
 	"github.com/gifff/chat-server/pkg/server/middlewares"
 
@@ -30,6 +33,16 @@ type Server struct {
 }
 
 // Start fires up the Echo server
-func (s Server) Start() {
-	s.e.Logger.Fatal(s.e.Start(s.port))
+func (s Server) Start() <-chan struct{} {
+	ch := make(chan struct{}, 1)
+	go func() {
+		if err := s.e.Start(s.port); err != nil && err != http.ErrServerClosed {
+			log.Printf("[ERROR] got error when starting server: %s", err)
+			ch <- struct{}{}
+		}
+
+		close(ch)
+	}()
+
+	return ch
 }
