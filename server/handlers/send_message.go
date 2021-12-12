@@ -3,11 +3,11 @@ package handlers
 import (
 	"github.com/labstack/echo"
 
-	"github.com/gifff/chat-server/pkg/model"
+	"github.com/gifff/chat-server/model"
 )
 
 // SendMessage handler
-func SendMessage(c echo.Context) error {
+func (h *Handlers) SendMessage(c echo.Context) error {
 	var reqBody model.Message
 	err := c.Bind(&reqBody)
 	if err != nil {

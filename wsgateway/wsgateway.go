@@ -1,30 +1,29 @@
-package gateway
+package wsgateway
 
 import (
 	"log"
 	"sync"
 	"time"
 
-	"github.com/gifff/chat-server/contract"
-	"github.com/gifff/chat-server/pkg/model"
-	"github.com/gifff/chat-server/pkg/websocket"
+	"github.com/gifff/chat-server/model"
+	"github.com/gifff/chat-server/websocket"
 )
 
-// NewWebsocket returns Websocket object which satisfies the WebsocketGateway contract
-func NewWebsocket() contract.WebsocketGateway {
-	return &Websocket{
+// New returns Websocket object which satisfies the WebsocketGateway contract
+func New() WebsocketGateway {
+	return &wsGateway{
 		userConnectionPoolMap: make(map[int]*websocket.ConnectionPool),
 	}
 }
 
-// Websocket is WebsocketGateway implementation
-type Websocket struct {
+// wsGateway is WebsocketGateway implementation
+type wsGateway struct {
 	mu                    sync.RWMutex
 	userConnectionPoolMap map[int]*websocket.ConnectionPool
 }
 
 // EnqueueMessageBroadcast implementation
-func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromUserID int) {
+func (w *wsGateway) EnqueueMessageBroadcast(messageID int, message string, fromUserID int) {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 
@@ -41,27 +40,27 @@ func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromU
 		}
 
 		for connID, conn := range userConnectionPool.Slice() {
-			log.Printf("Writing to [User ID: %d][Conn ID: %d] at %d", userID, connID, time.Now().UnixNano())
-			conn.Enqueue(message)
+			log.Printf("[DEBUG] Writing to [User ID: %d][Conn ID: %d] at %d", userID, connID, time.Now().UnixNano())
+			conn.Dispatch(message)
 		}
 	}
 }
 
 // RegisterConnection implementation
-func (w *Websocket) RegisterConnection(userID int, connection contract.WebsocketConnection) (registrationID int) {
+func (w *wsGateway) RegisterConnection(userID int, connection websocket.ConnectionDispatcher) (registrationID int) {
 	w.mu.Lock()
 	if _, ok := w.userConnectionPoolMap[userID]; !ok {
 		w.userConnectionPoolMap[userID] = websocket.NewConnectionPool()
 	}
 	registrationID = w.userConnectionPoolMap[userID].Store(connection)
-	connection.StartWorker()
+	connection.StartDispatcher()
 	w.mu.Unlock()
 
 	return
 }
 
 // UnregisterConnection implementation
-func (w *Websocket) UnregisterConnection(userID int, registrationID int) {
+func (w *wsGateway) UnregisterConnection(userID int, registrationID int) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
@@ -75,6 +74,6 @@ func (w *Websocket) UnregisterConnection(userID int, registrationID int) {
 		return
 	}
 
-	connection.StopWorker()
+	connection.StopDispatcher()
 	userConnectionPool.Delete(registrationID)
 }

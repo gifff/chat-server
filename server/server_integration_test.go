@@ -12,10 +12,21 @@ import (
 	"github.com/labstack/echo"
 	"github.com/posener/wstest"
 
-	"github.com/gifff/chat-server/pkg/di"
-	"github.com/gifff/chat-server/pkg/model"
-	"github.com/gifff/chat-server/pkg/server"
+	"github.com/gifff/chat-server/deps"
+	"github.com/gifff/chat-server/model"
+	"github.com/gifff/chat-server/server"
+	"github.com/gifff/chat-server/server/handlers"
 )
+
+var hs handlers.Handlers
+
+func init() {
+	wgw, chatSvc := deps.BuildDependencies()
+	hs = handlers.Handlers{
+		WebsocketGateway: wgw,
+		ChatService:      chatSvc,
+	}
+}
 
 func closeConnection(c *websocket.Conn) error {
 	err := c.WriteControl(
@@ -29,13 +40,9 @@ func closeConnection(c *websocket.Conn) error {
 	return c.Close()
 }
 
-func init() {
-	di.InjectDependencies()
-}
-
-func TestHelloHandler(t *testing.T) {
+func TestMessageListenerHandler(t *testing.T) {
 	e := echo.New()
-	_ = server.New(e, "")
+	_ = server.New(e, "", hs)
 
 	senderOutgoingMessages := []model.Message{
 		{
@@ -187,9 +194,9 @@ func TestHelloHandler(t *testing.T) {
 		}
 	})
 }
-func TestHelloHandlerMultipleConnectionPerClient(t *testing.T) {
+func TestMessageListenerHandlerMultipleConnectionPerClient(t *testing.T) {
 	e := echo.New()
-	_ = server.New(e, "")
+	_ = server.New(e, "", hs)
 
 	senderOutgoingMessages := []model.Message{
 		{
