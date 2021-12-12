@@ -34,11 +34,11 @@ func Hello(c echo.Context) error {
 		var msg model.Message
 		err := ws.ReadJSON(&msg)
 		if err != nil {
-			log.Printf("Error while reading message [userID: %d] : %v\n", userID, err)
+			log.Printf("[DEBUG] Error while reading message [userID: %d] : %v\n", userID, err)
 			break
 		}
 
-		log.Printf("Message [userID: %d]: %+v\n", userID, msg)
+		log.Printf("[DEBUG] Message [userID: %d]: %+v\n", userID, msg)
 
 		if msg.Type != model.UnknownMessage {
 			ChatService.SendMessage(msg.Message, userID)

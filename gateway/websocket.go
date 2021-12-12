@@ -41,7 +41,7 @@ func (w *Websocket) EnqueueMessageBroadcast(messageID int, message string, fromU
 		}
 
 		for connID, conn := range userConnectionPool.Slice() {
-			log.Printf("Writing to [User ID: %d][Conn ID: %d] at %d", userID, connID, time.Now().UnixNano())
+			log.Printf("[DEBUG] Writing to [User ID: %d][Conn ID: %d] at %d", userID, connID, time.Now().UnixNano())
 			conn.Enqueue(message)
 		}
 	}
