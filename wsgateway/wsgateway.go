@@ -77,3 +77,12 @@ func (w *wsGateway) UnregisterConnection(userID int, registrationID int) {
 	connection.StopDispatcher()
 	userConnectionPool.Delete(registrationID)
 }
+
+func (w *wsGateway) TotalConnections() int {
+	n := 0
+	for _, connPool := range w.userConnectionPoolMap {
+		n += connPool.Size()
+	}
+
+	return n
+}

@@ -58,3 +58,8 @@ func (cp *ConnectionPool) Slice() []ConnectionDispatcher {
 	cp.mu.Unlock()
 	return conns
 }
+
+// Size returns the number of connections in the pool
+func (cp *ConnectionPool) Size() int {
+	return len(cp.pool)
+}

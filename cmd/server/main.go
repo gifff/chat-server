@@ -19,13 +19,15 @@ import (
 )
 
 var (
-	logLevel string
-	port     int
+	logLevel     string
+	port         int
+	connReporter bool
 )
 
 func main() {
 	flag.StringVar(&logLevel, "log-level", "INFO", "log level. Available options: DEBUG, INFO, WARN, DEBUG")
 	flag.IntVar(&port, "port", 8080, "server port")
+	flag.BoolVar(&connReporter, "reporter-enabled", false, "enable total connections reporter that ticks every second")
 	flag.Parse()
 
 	log.SetOutput(logger.NewLevelFilter(logLevel, os.Stdout))
@@ -43,6 +45,15 @@ func main() {
 	s := server.New(e, serverPort, hs)
 	serverCh := s.Start()
 	log.Printf("[INFO] Chat Server is started at port %d", port)
+
+	if connReporter {
+		go func() {
+			for {
+				<-time.After(1 * time.Second)
+				log.Printf("[INFO] Number of connections: %d", wgw.TotalConnections())
+			}
+		}()
+	}
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 10 seconds.
