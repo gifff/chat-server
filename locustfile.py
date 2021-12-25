@@ -1,12 +1,10 @@
 import json
 import logging
-import re
 import time
 import gevent
 import websocket
 import uuid
 from locust import between, task, User
-from locust_plugins.users import SocketIOUser
 
 class WebsocketUser(User):
     abstract = True
@@ -100,23 +98,20 @@ class WebsocketUser(User):
         self.ws.send(msg)
         return msg_id
 
-    def send_and_wait(self, path: str, message: str, timeout: int = 10):
-        # step 1: connect
-        target_uri = self.host + path
-
-        self._connect(target_uri, ['X-User-Id: 1000'])
-
-        # step 2: send through ws
+    def send_and_wait(self, message: str, timeout: int = 10):
+        # send through ws
         self.send(message)
         sent_time = time.time()
 
-        # step 3: wait for message to be received back OR timeout (in second)
+        # wait for message to be received back OR timeout (in second)
         while True:
             if not self.ws.connected:
                 break
 
             current_time = time.time()
             if current_time - sent_time > timeout:
+                # change msg_id so that when the message bounces back, it doesn't get reported.
+                self._current_msg_id = None
                 self.environment.events.request.fire(
                     request_type="WSR",
                     name=message,
@@ -130,17 +125,20 @@ class WebsocketUser(User):
                 break
             time.sleep(0.1)
 
-        # step 4: close
-        self._close()
-
     def _close(self):
         self.ws.close()
+    
+    def on_start(self):
+        self._connect(self.host, ['X-User-Id: 1000'])
+
+    def on_stop(self):
+        self._close()
 
 
 class BouncebackWebsocketUser(WebsocketUser):
     @task
     def send_and_wait_bounceback(self):
-        self.send_and_wait('/messages/listen', 'anything')
+        self.send_and_wait('anything')
 
     if __name__ == "__main__":
-        host = "ws://localhost:9999"
+        host = "ws://localhost:8080/messages/listen"

@@ -1,3 +1,3 @@
 gevent==21.8.0
-locust_plugins==2.1.1
-locustio==0.999
+websocket-client==1.2.3
+locust==2.5.1
